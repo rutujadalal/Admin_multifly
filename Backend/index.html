@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Dashboard</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: Arial, sans-serif;
+      }
+
+      body {
+        background-color: #f4f7fa;
+        color: #333;
+        line-height: 1.6;
+      }
+
+      .sidebar {
+        width: 250px;
+        height: 100vh;
+        background-color: #2c3e50;
+        position: fixed;
+        top: 0;
+        left: 0;
+        padding-top: 20px;
+        transform: translateX(-250px);
+        transition: transform 0.3s ease;
+      }
+
+      .sidebar.active {
+        transform: translateX(0);
+      }
+
+      .sidebar h2 {
+        color: #fff;
+        text-align: center;
+        margin-bottom: 20px;
+        font-size: 24px;
+      }
+
+      .sidebar ul {
+        list-style: none;
+      }
+
+      .sidebar ul li {
+        padding: 15px 20px;
+        color: #ecf0f1;
+        font-size: 16px;
+        cursor: pointer;
+        transition: background 0.3s;
+      }
+
+      .sidebar ul li:hover {
+        background-color: #34495e;
+      }
+
+      .sidebar ul li a {
+        color: #ecf0f1;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+      }
+
+      .main-content {
+        margin-left: 0;
+        padding: 20px;
+        transition: margin-left 0.3s ease;
+      }
+
+      .main-content.shifted {
+        margin-left: 250px;
+      }
+
+      .login-container,
+      .otp-container {
+        max-width: 400px;
+        margin: 50px auto;
+        background: #fff;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      }
+
+      .content-area {
+        max-width: 800px;
+        margin: 20px auto;
+        background: #fff;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        display: none;
+      }
+
+      h1,
+      h2 {
+        text-align: center;
+        margin-bottom: 20px;
+        color: #2c3e50;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+      }
+
+      input {
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 15px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+      }
+
+      button {
+        width: 100%;
+        padding: 10px;
+        background-color: #2c3e50;
+        color: #fff;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background 0.3s;
+      }
+
+      button:hover {
+        background-color: #34495e;
+      }
+
+      .toggle-btn {
+        position: fixed;
+        top: 20px;
+        left: 20px;
+        background: #2c3e50;
+        color: #fff;
+        border: none;
+        padding: 10px;
+        cursor: pointer;
+        border-radius: 4px;
+        z-index: 1000;
+        display: none;
+      }
+
+      .toggle-btn.active {
+        display: block;
+      }
+
+      /* Modal Styles */
+      #editModal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1001;
+      }
+
+      #editModal .modal-content {
+        background: white;
+        margin: 100px auto;
+        padding: 20px;
+        width: 400px;
+        border-radius: 8px;
+      }
+
+      #editModal button {
+        width: 48%;
+        margin: 10px 1%;
+      }
+    </style>
+  </head>
+  <body>
+    <button class="toggle-btn" id="toggleSidebar">☰ Menu</button>
+
+    <div class="sidebar" id="sidebar">
+      <h2>Admin Menu</h2>
+      <ul id="sidebarMenu"></ul>
+    </div>
+
+    <div class="main-content" id="mainContent">
+      <div class="login-container" id="loginSection">
+        <h1>Admin Login</h1>
+        <form id="loginForm">
+          <label for="email">Email:</label>
+          <input type="email" id="email" name="email" required />
+          <label for="password">Password:</label>
+          <input type="password" id="password" name="password" required />
+          <button type="submit">Login</button>
+        </form>
+      </div>
+
+      <div class="otp-container" id="otpSection" style="display: none">
+        <h2>Enter OTP</h2>
+        <form id="otpForm">
+          <label for="otp">OTP:</label>
+          <input type="text" id="otp" name="otp" required />
+          <button type="submit">Verify OTP</button>
+        </form>
+      </div>
+
+      <div class="content-area" id="contentArea">
+        <h2 id="contentTitle"></h2>
+        <div id="contentBody"></div>
+      </div>
+    </div>
+
+    <!-- Edit User Modal -->
+    <div id="editModal">
+      <div class="modal-content">
+        <h2>Edit User</h2>
+        <form id="editUserForm">
+          <label for="name">Name:</label>
+          <input type="text" id="name" name="name" required />
+          <label for="email">Email:</label>
+          <label for="phone">Phone:</label>
+          <input type="text" id="phone" name="phone" />
+          <button type="submit">Save</button>
+          <button
+            type="button"
+            onclick="document.getElementById('editModal').style.display='none'"
+          >
+            Cancel
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <script>
+      const sidebar = document.getElementById("sidebar");
+      const mainContent = document.getElementById("mainContent");
+      const toggleBtn = document.getElementById("toggleSidebar");
+      const contentArea = document.getElementById("contentArea");
+      const contentTitle = document.getElementById("contentTitle");
+      const contentBody = document.getElementById("contentBody");
+
+      // Toggle sidebar visibility
+      toggleBtn.addEventListener("click", () => {
+        sidebar.classList.toggle("active");
+        mainContent.classList.toggle("shifted");
+      });
+
+      // Handle login form submission
+      document
+        .getElementById("loginForm")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const email = document.getElementById("email").value;
+          const password = document.getElementById("password").value;
+
+          try {
+            const response = await fetch(
+              "http://127.0.0.1:5000/api/admin/adminlogin",
+              {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+                body: JSON.stringify({ email, password }),
+              }
+            );
+            const data = await response.json();
+            if (response.ok) {
+              document.getElementById("loginSection").style.display = "none";
+              document.getElementById("otpSection").style.display = "block";
+              localStorage.setItem("email", email);
+            } else {
+              alert(data.error || "Login failed");
+            }
+          } catch (error) {
+            console.error("Login error:", error);
+            alert("An error occurred during login");
+          }
+        });
+
+      // Handle OTP form submission
+      document
+        .getElementById("otpForm")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const otp = document.getElementById("otp").value;
+          const email = localStorage.getItem("email");
+
+          try {
+            const response = await fetch(
+              "http://127.0.0.1:5000/api/admin/verifyotp",
+              {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+                body: JSON.stringify({ email, otp }),
+              }
+            );
+            const data = await response.json();
+            if (response.ok) {
+              document.getElementById("otpSection").style.display = "none";
+              fetchSidebarMenu();
+            } else {
+              alert(data.error || "OTP verification failed");
+            }
+          } catch (error) {
+            console.error("OTP error:", error);
+            alert("An error occurred during OTP verification");
+          }
+        });
+
+      // Fetch and populate sidebar menu
+      async function fetchSidebarMenu() {
+        try {
+          const response = await fetch(
+            "http://127.0.0.1:5000/api/admin/sidebar",
+            {
+              credentials: "include",
+            }
+          );
+          const data = await response.json();
+          if (response.ok) {
+            const menuList = document.getElementById("sidebarMenu");
+            menuList.innerHTML = "";
+            data.menu.forEach((item) => {
+              const li = document.createElement("li");
+              const a = document.createElement("a");
+              a.textContent = item.name;
+              a.dataset.url = item.url;
+              a.addEventListener("click", (e) => {
+                e.preventDefault();
+                loadContent(item.name, item.url);
+              });
+              li.appendChild(a);
+              menuList.appendChild(li);
+            });
+            sidebar.classList.add("active");
+            mainContent.classList.add("shifted");
+            toggleBtn.classList.add("active");
+          } else {
+            alert("Failed to fetch sidebar menu: " + data.error);
+          }
+        } catch (error) {
+          console.error("Sidebar error:", error);
+          alert("An error occurred while fetching sidebar menu");
+        }
+      }
+
+      // Load content based on menu selection
+      async function loadContent(name, url) {
+        try {
+          let apiUrl;
+          if (url === "/dashboard") {
+            apiUrl = "http://127.0.0.1:5000/api/admin/dashboard";
+          } else if (url === "/bookings") {
+            apiUrl = "http://127.0.0.1:5000/api/admin/bookings";
+          } else if (url.startsWith("/bookings/")) {
+            const id = url.split("/")[2];
+            apiUrl = `http://127.0.0.1:5000/api/admin/bookings/${id}`;
+          } else {
+            apiUrl = `http://127.0.0.1:5000/api/admin${url}`;
+          }
+
+          const response = await fetch(apiUrl, {
+            credentials: "include",
+          });
+          const data = await response.json();
+          if (response.ok) {
+            contentTitle.textContent = name;
+            contentBody.innerHTML = "";
+
+            if (url === "/dashboard") {
+              contentBody.innerHTML = `
+                            <div>Total Users: ${data.totalUsers}</div>
+                            <div>Total Bookings: ${data.totalBookings}</div>
+                            <div>Total Revenue: $${
+                              data.totalRevenue?.toFixed(2) || "N/A"
+                            }</div>
+                        `;
+            } else if (url === "/bookings") {
+              if (data.length === 0) {
+                contentBody.textContent = "No bookings found.";
+              } else {
+                const table = document.createElement("table");
+                table.style.width = "100%";
+                table.style.borderCollapse = "collapse";
+                table.innerHTML = `
+                                <thead>
+                                    <tr style="background-color: #2c3e50; color: white;">
+                                        <th style="padding: 10px; border: 1px solid #ddd;">ID</th>
+                                        <th style="padding: 10px; border: 1px solid #ddd;">User</th>
+                                        <th style="padding: 10px; border: 1px solid #ddd;">Date</th>
+                                        <th style="padding: 10px; border: 1px solid #ddd;">Status</th>
+                                        <th style="padding: 10px; border: 1px solid #ddd;">Total Amount</th>
+                                        <th style="padding: 10px; border: 1px solid #ddd;">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            `;
+                const tbody = table.querySelector("tbody");
+                data.forEach((booking) => {
+                  const tr = document.createElement("tr");
+                  tr.innerHTML = `
+                                    <td style="padding: 10px; border: 1px solid #ddd;">${
+                                      booking.id
+                                    }</td>
+                                    <td style="padding: 10px; border: 1px solid #ddd;">${
+                                      booking.user_name
+                                    }</td>
+                                    <td style="padding: 10px; border: 1px solid #ddd;">${new Date(
+                                      booking.date
+                                    ).toLocaleString()}</td>
+                                    <td style="padding: 10px; border: 1px solid #ddd;">${
+                                      booking.status
+                                    }</td>
+                                    <td style="padding: 10px; border: 1px solid #ddd;">$${
+                                      booking.total_amount?.toFixed(2) || "N/A"
+                                    }</td>
+                                    <td style="padding: 10px; border: 1px solid #ddd;">
+                                        <button onclick="loadContent('Booking Details', '/bookings/${
+                                          booking.id
+                                        }')">View Details</button>
+                                    </td>
+                                `;
+                  tbody.appendChild(tr);
+                });
+                contentBody.appendChild(table);
+              }
+            } else if (url.startsWith("/bookings/")) {
+              const id = url.split("/")[2];
+              contentBody.innerHTML = `
+                            <h3>Booking Details</h3>
+                            <p>ID: ${data.id}</p>
+                            <p>User: ${data.user_name}</p>
+                            <p>Date: ${new Date(data.date).toLocaleString()}</p>
+                            <p>Status: ${data.status}</p>
+                            <p>Total Amount: $${
+                              data.total_amount?.toFixed(2) || "N/A"
+                            }</p>
+                            <h4>Update Status</h4>
+                            <form id="updateStatusForm_${id}">
+                                <label for="status">Status:</label>
+                                <select id="status_${id}" name="status">
+                                    <option value="pending" ${
+                                      data.status === "pending"
+                                        ? "selected"
+                                        : ""
+                                    }>Pending</option>
+                                    <option value="confirmed" ${
+                                      data.status === "confirmed"
+                                        ? "selected"
+                                        : ""
+                                    }>Confirmed</option>
+                                    <option value="canceled" ${
+                                      data.status === "canceled"
+                                        ? "selected"
+                                        : ""
+                                    }>Canceled</option>
+                                    <option value="refunded" ${
+                                      data.status === "refunded"
+                                        ? "selected"
+                                        : ""
+                                    }>Refunded</option>
+                                </select>
+                                <button type="submit">Save</button>
+                            </form>
+                        `;
+              document
+                .getElementById(`updateStatusForm_${id}`)
+                .addEventListener("submit", async (e) => {
+                  e.preventDefault();
+                  const newStatus = document.getElementById(
+                    `status_${id}`
+                  ).value;
+                  const updateResponse = await fetch(
+                    `http://127.0.0.1:5000/api/admin/bookings/${id}/status`,
+                    {
+                      method: "PUT",
+                      headers: { "Content-Type": "application/json" },
+                      credentials: "include",
+                      body: JSON.stringify({ status: newStatus }),
+                    }
+                  );
+                  const updateData = await updateResponse.json();
+                  if (updateResponse.ok) {
+                    alert("Status updated successfully");
+                    loadContent("Booking Details", `/bookings/${id}`);
+                  } else {
+                    alert(`Failed to update status: ${updateData.error}`);
+                  }
+                });
+            } else {
+              if (
+                url === "/view-users" ||
+                url === "/edit-users" ||
+                url === "/blocked-users"
+              ) {
+                const users = data;
+                if (users.length === 0) {
+                  contentBody.textContent = `No ${name.toLowerCase()} found.`;
+                } else {
+                  const table = document.createElement("table");
+                  table.style.width = "100%";
+                  table.style.borderCollapse = "collapse";
+                  table.innerHTML = `
+                                    <thead>
+                                        <tr style="background-color: #2c3e50; color: white;">
+                                            <th style="padding: 10px; border: 1px solid #ddd;">ID</th>
+                                            <th style="padding: 10px; border: 1px solid #ddd;">Name</th>
+                                            <th style="padding: 10px; border: 1px solid #ddd;">Email</th>
+                                            <th style="padding: 10px; border: 1px solid #ddd;">Phone</th>
+                                            <th style="padding: 10px; border: 1px solid #ddd;">Role</th>
+                                            <th style="padding: 10px; border: 1px solid #ddd;">Status</th>
+                                            
+                                            ${
+                                              url === "/edit-users" ||
+                                              url === "/blocked-users"
+                                                ? '<th style="padding: 10px; border: 1px solid #ddd;">Actions</th>'
+                                                : ""
+                                            }
+                                        </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                `;
+                  const tbody = table.querySelector("tbody");
+                  users.forEach((user) => {
+                    let actionsTdHtml = "";
+                    if (url === "/edit-users") {
+                      actionsTdHtml =
+                        '<td style="padding: 10px; border: 1px solid #ddd;"><button onclick="editUser(' +
+                        user.id +
+                        ')">Edit</button></td>';
+                    } else if (url === "/blocked-users") {
+                      actionsTdHtml =
+                        '<td style="padding: 10px; border: 1px solid #ddd;"><button onclick="unblockUser(' +
+                        user.id +
+                        ')">Unblock</button></td>';
+                    }
+                    const tr = document.createElement("tr");
+                    tr.innerHTML = `
+                                        <td style="padding: 10px; border: 1px solid #ddd;">${
+                                          user.id
+                                        }</td>
+                                        <td style="padding: 10px; border: 1px solid #ddd;">${
+                                          user.name
+                                        }</td>
+                                        <td style="padding: 10px; border: 1px solid #ddd;">${
+                                          user.email
+                                        }</td>
+                                        <td style="padding: 10px; border: 1px solid #ddd;">${
+                                          user.phone || "N/A"
+                                        }</td>
+                                        <td style="padding: 10px; border: 1px solid #ddd;">${
+                                          user.role
+                                        }</td>
+                                        <td style="padding: 10px; border: 1px solid #ddd;">${
+                                          user.status ? "Active" : "Blocked"
+                                        }</td>
+                                        ${
+                                          url === "/kyc-approval"
+                                            ? `<td style="padding: 10px; border: 1px solid #ddd;">${
+                                                user.kyc_status || "Pending"
+                                              }</td>`
+                                            : ""
+                                        }
+                                        ${actionsTdHtml}
+                                    `;
+                    tbody.appendChild(tr);
+                  });
+                  contentBody.appendChild(table);
+                }
+              } else {
+                contentBody.textContent = JSON.stringify(data, null, 2);
+              }
+            }
+            contentArea.style.display = "block";
+          } else {
+            alert(`Failed to load ${name}: ${data.error}`);
+          }
+        } catch (error) {
+          console.error(`${name} error:`, error);
+          alert(`An error occurred while loading ${name}`);
+        }
+      }
+
+      // [Other functions, like editUser, updated for editEmail]
+      async function editUser(userId) {
+        try {
+          console.log(
+            `Fetching user data from: http://127.0.0.1:5000/api/admin/users/${userId}`
+          );
+          const response = await fetch(
+            `http://127.0.0.1:5000/api/admin/users/${userId}`,
+            {
+              credentials: "include",
+            }
+          );
+          console.log(`Response status: ${response.status}`);
+          const data = await response.json();
+          if (response.ok) {
+            const user = data;
+            document.getElementById("name").value = user.name || "";
+            document.getElementById("editEmail").value = user.email || "";
+            document.getElementById("phone").value = user.phone || "";
+            document.getElementById("editModal").style.display = "block";
+
+            const form = document.getElementById("editUserForm");
+            form.onsubmit = null;
+            form.addEventListener("submit", async (e) => {
+              e.preventDefault();
+              const updatedData = {
+                name: document.getElementById("name").value,
+                email: document.getElementById("editEmail").value,
+                phone: document.getElementById("phone").value,
+              };
+              await saveUser(userId, updatedData);
+              document.getElementById("editModal").style.display = "none";
+            });
+          } else {
+            alert(
+              `Failed to load user: ${
+                data.error || response.statusText || "Unknown error"
+              }`
+            );
+          }
+        } catch (error) {
+          console.error("Error fetching user:", error);
+          alert("An error occurred while fetching user data");
+        }
+      }
+      // Save updated user data
+      async function saveUser(userId, updatedData) {
+        try {
+          const response = await fetch(
+            `http://127.0.0.1:5000/api/admin/users/${userId}`,
+            {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              credentials: "include",
+              body: JSON.stringify(updatedData),
+            }
+          );
+          const data = await response.json();
+          if (response.ok) {
+            alert("User updated successfully");
+            loadContent("Edit Users", "/edit-users");
+          } else {
+            alert(`Failed to update user: ${data.error || "Unknown error"}`);
+          }
+        } catch (error) {
+          console.error("Error updating user:", error);
+          alert("An error occurred while updating the user");
+        }
+      }
+
+      // Unblock user
+      async function unblockUser(userId) {
+        try {
+          const response = await fetch(
+            `http://127.0.0.1:5000/api/admin/users/${userId}/unblock`,
+            {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              credentials: "include",
+            }
+          );
+          const data = await response.json();
+          if (response.ok) {
+            alert("User unblocked successfully");
+            loadContent("Blocked Users", "/blocked-users");
+          } else {
+            alert(`Failed to unblock user: ${data.error}`);
+          }
+        } catch (error) {
+          console.error("Unblock error:", error);
+          alert("An error occurred while unblocking user");
+        }
+      }
+    </script>
+  </body>
+</html>

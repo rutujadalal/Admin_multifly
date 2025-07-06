@@ -33,7 +33,7 @@ const CardManagement = () => {
     admin_id: '1',
   });
 
-  const API_BASE_URL = 'http://localhost:5000/api/admin';
+  const API_BASE_URL = 'https://admin-zux7.onrender.com/api/admin';
 
   useEffect(() => {
     handleFetchAllCards();

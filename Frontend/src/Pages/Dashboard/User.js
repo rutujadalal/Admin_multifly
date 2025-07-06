@@ -14,7 +14,7 @@ const UserAdmin = () => {
   const [showSearchInput, setShowSearchInput] = useState(false);
   const [updateUserData, setUpdateUserData] = useState({ id: '', name: '', phone: '' });
 
-  const API_BASE_URL = 'http://localhost:5000';
+  const API_BASE_URL = 'https://admin-zux7.onrender.com';
 
   // Helper function to get the auth token from localStorage
   const getAuthHeaders = () => {

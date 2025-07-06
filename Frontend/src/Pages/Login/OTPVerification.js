@@ -25,7 +25,7 @@ const OTPVerification = () => {
 
     try {
       const email = localStorage.getItem("admin_email");
-      const response = await fetch("http://localhost:5000/api/admin/verifyotp", {
+      const response = await fetch("https://admin-zux7.onrender.com/api/admin/verifyotp", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

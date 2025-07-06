@@ -23,7 +23,7 @@ export const Login = () => {
     }
 
   try {
-    const response = await fetch("http://localhost:5000/api/admin/adminlogin", {
+    const response = await fetch("https://admin-zux7.onrender.com/api/admin/adminlogin", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

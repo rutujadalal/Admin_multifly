@@ -75,6 +75,7 @@ const authRoutes = require("./routes/authRoutes");
 const userRoutes = require("./routes/userRoutes");
 const siderRoutes = require("./routes/siderRoutes");
 const adminRoutes = require("./routes/adminRoutes");
+const usercontroller = require("./controllers/usercontroller");
 
 
 app.use("/api/admin", destinationRoutes);

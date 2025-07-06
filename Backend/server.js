@@ -14,6 +14,7 @@ app.use(cookieParser());
 // Define allowed origins
 const allowedOrigins = [
   "http://localhost:3000",
+  "https://adminporta.netlify.app",
   "http://localhost:3001",
   "http://127.0.0.1:5500",
 ];

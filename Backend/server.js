@@ -84,13 +84,13 @@ app.use("/api/admin", siderRoutes);
 app.use("/api/admin", adminRoutes);
 
 // User routes
-app.get("/users", userController.getUsers);
-app.get("/users/:id", userController.getUserById);
-app.get("/users/:name", userController.getUsersByName);
-app.put("/users/:id", userController.updateUser);
-app.put("/users/:id/block", userController.blockUser);
-app.put("/users/:id/unblock", userController.unblockUser);
-app.delete("/users/:id", userController.deleteUser);
+app.get("/users", usercontroller.getUsers);
+app.get("/users/:id", usercontroller.getUserById);
+app.get("/users/:name", usercontroller.getUsersByName);
+app.put("/users/:id", usercontroller.updateUser);
+app.put("/users/:id/block", usercontroller.blockUser);
+app.put("/users/:id/unblock", usercontroller.unblockUser);
+app.delete("/users/:id", usercontroller.deleteUser);
 
 // Debug session routes
 app.get("/api/admin/debug-session", (req, res) => {
